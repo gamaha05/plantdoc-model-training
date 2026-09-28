@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Model artifacts — these file live in GitHub Release, not in git
+outputs/
+*.pth
+*.pt
+
+# Dataset-cache (HuggingFace datasets caches locally, that might be gygabites of data)
+.cache/
+*.arrow
+
+# Jupyter/Colab
+.ipynb_checkpoints/
+
+# Secrets/environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artefacts
+.pytest_cache/
+.coverage
+htmlcov/
