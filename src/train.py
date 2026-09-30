@@ -8,6 +8,7 @@ import torch.optim as optim
 
 from src import config
 from src.data.loader import load_data
+from src.data.sampling import compute_class_weights
 from src.evaluate import evaluate
 from src.model import build_model
 
@@ -31,15 +32,22 @@ def train_one_epoch(model, loader, criterion, optimizer, device) -> float:
 
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        "cuda" if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available()
+        else "cpu"
+    )
     print(f"Using device: {device}")
 
     train_loader, val_loader, test_loader, class_names = load_data()
     print(f"Classes: {len(class_names)}")
 
+    class_weights = compute_class_weights(train_loader.dataset, len(class_names)).to(device)
+    print(f"Class weights range: {class_weights.min():.3f} - {class_weights.max():.3f}")
+
     model = build_model(num_classes=len(class_names)).to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.fc.parameters(), lr=config.LEARNING_RATE)
 
     best_val_accuracy = 0.0
@@ -62,8 +70,6 @@ def main():
             print(f"No improvement for {config.PATIENCE} epochs — stopping early at epoch {epoch + 1}.")
             break
 
-    # Returning the weights from the best epoch instead of last epoch because
-    # the last one could be worse if the model start relearning
     model.load_state_dict(best_model_state)
 
     test_accuracy = evaluate(model, test_loader, device)
